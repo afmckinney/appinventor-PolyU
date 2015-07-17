@@ -5522,4 +5522,16 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("ValueRead")
   @Description("")
   String ValueReadEvents();
+  
+  @DefaultMessage("DeviceFound")
+  @Description("")
+  String DeviceFoundEvents();
+  
+  @DefaultMessage("StopScanning")
+  @Description("")
+  String StopScanningMethods();
+  
+  @DefaultMessage("Test")
+  @Description("")
+  String TestProperties();
 }
