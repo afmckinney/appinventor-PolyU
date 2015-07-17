@@ -4180,7 +4180,7 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("TakePicture")
   @Description("")
   String TakePictureMethods();
-  
+
   @DefaultMessage("ToggleLight")
   @Description("")
   String ToggleLightMethods();
@@ -5327,11 +5327,11 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GetRowsWithConditionsMethods();
 
-  @DefaultMessage("ÁÆ˛˝˛˝‰∏≠Ê˛˝")
+  @DefaultMessage("ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ‰∏≠ÔøΩÔøΩÔøΩ")
   @Description("")
   String SwitchToSimplifiedChinese();
 
-  @DefaultMessage("ÁπÅ‰˛˝‰∏≠Ê˛˝")
+  @DefaultMessage("ÁπÅÔøΩÔøΩÔøΩ‰∏≠ÔøΩÔøΩÔøΩ")
   @Description("")
   String SwitchToTraditionalChinese();
 
@@ -5434,43 +5434,47 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("XMLTextDecode")
   @Description("")
   String XMLTextDecodeMethods();
-  
+
   @DefaultMessage("BLE")
   @Description("")
   String bleComponentPallette();
-  
-  @DefaultMessage("ScanDevice")
+
+  @DefaultMessage("ScanDeviceStart")
   @Description("")
-  String ScanDeviceMethods();
-  
+  String ScanDeviceStartMethods();
+    
+  @DefaultMessage("ScanDeviceStop")
+  @Description("")
+    String ScanDeviceStopMethods();
+
   @DefaultMessage("ConnectDevice")
   @Description("")
   String ConnectDeviceMethods();
-  
+
   @DefaultMessage("DeviceList")
   @Description("")
   String DeviceListProperties();
-  
+
   @DefaultMessage("ConnectedDeviceRssi")
   @Description("")
   String ConnectedDeviceRssiProperties();
-  
+
   @DefaultMessage("GetBatteryValue")
   @Description("")
   String GetBatteryValueProperties();
-  
+
   @DefaultMessage("ReadBatteryValue")
   @Description("")
   String ReadBatteryValueMethods();
-  
+
   @DefaultMessage("GetTemperature")
   @Description("")
   String GetTemperatureProperties();
-  
+
   @DefaultMessage("IsBLEConnected")
   @Description("")
   String IsBLEConnectedProperties();
-  
+
   @DefaultMessage("ReadTemperature")
   @Description("")
   String ReadTemperatureMethods();
@@ -5478,47 +5482,51 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Connected")
   @Description("")
   String ConnectedEvents();
-  
+
   @DefaultMessage("RssiChanged")
   @Description("")
   String RssiChangedEvents();
-  
+
   @DefaultMessage("ValueChanged")
   @Description("")
   String ValueChangedEvents();
-  
+
+  @DefaultMessage("DeviceFound")
+  @Description("")
+  String DeviceFoundEvents();
+
   @DefaultMessage("GetFindMeValue")
   @Description("")
   String GetFindMeValueProperties();
-  
+
   @DefaultMessage("ReadFindMeValue")
   @Description("")
   String ReadFindMeValueMethods();
-  
+
   @DefaultMessage("SetFindMeValue")
   @Description("")
   String SetFindMeValueMethods();
-  
+
   @DefaultMessage("SelectedDeviceRssi")
   @Description("")
   String SelectedDeviceRssiProperties();
-  
+
   @DefaultMessage("ConnectedDeviceRssiChanged")
   @Description("")
   String ConnectedDeviceRssiChangedEvents();
-  
+
   @DefaultMessage("SelectedDevice")
   @Description("")
   String SelectedDeviceMethods();
-  
+
   @DefaultMessage("SelectedDeviceName")
   @Description("")
   String SelectedDeviceNameProperties();
-  
+
   @DefaultMessage("SelectedDeviceAddress")
   @Description("")
   String SelectedDeviceAddressProperties();
-  
+
   @DefaultMessage("ValueRead")
   @Description("")
   String ValueReadEvents();

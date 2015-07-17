@@ -26,15 +26,17 @@ import android.bluetooth.BluetoothProfile;
 import android.os.Handler;
 import android.content.Context;
 import android.app.Activity;
+import android.content.Intent;
 
 
 /**
  * BLE provides scanning BLE device and connection
  *
- * By Tony Chan @ PolyU (kwong3513@yahoo.com.hk)
+ * By Tony Chan & Bain ZHANG @ PolyU (kwong3513@yahoo.com.hk & 12131354d@connect.polyu.hk)
  */
+
 @DesignerComponent(version = YaVersion.BLE_COMPONENT_VERSION,
-   description = "Add it later",
+   description = "This is a trial version of BLE component, blocks need to be specified later",
    category = ComponentCategory.CONNECTIVITY,
    nonVisible = true,
    iconName = "images/ble.png")
@@ -44,31 +46,41 @@ import android.app.Activity;
 				"android.permission.BLUETOOTH_ADMIN")
 
 public class BLE extends AndroidNonvisibleComponent implements Component{
-	
-  //-----------basic-------------------------
+
+  /**
+   * Basic Variable
+   */
   private BluetoothAdapter mBluetoothAdapter;
   private final Activity activity;
   private BluetoothGatt mBluetoothGatt;
   private BluetoothGattService currentser;
   private BluetoothGattCharacteristic currentchar;
+  private Runnable runScan;
   private int device_rssi=0;
-  private Handler uiThread;
+  private final Handler uiThread;
   private int selectedIndex=0;
-  
-  //----------list-------------------------
+  private int time=1000;
+  private static final int REQUEST_ENABLE_BT = 1;
+
+  /**
+   * BLE Info List
+   */
   private String deviceAddressList="";
   private List<BluetoothDevice> mLeDevices;
   private List<BluetoothGattService> mGattService;
   private HashMap<BluetoothDevice, Integer> mLeDevices_rssi;
-  
-  //---------status------------------------
+
+  /**
+   * BLE Device Status
+   */
   private static boolean STATE_CONNECTED = false;
   private static boolean STATE_CHARREAD = false;
   private static boolean STATE_SERREAD = false;
-  
-  /*//----------for future use---------------
+
+  /**
+   * For Furture Developement
   public final static String ACTION_GATT_CONNECTED =
-          "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
+           "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
   public final static String ACTION_GATT_DISCONNECTED =
           "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
   public final static String ACTION_GATT_SERVICES_DISCOVERED =
@@ -78,83 +90,90 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
   public final static String EXTRA_DATA =
           "com.example.bluetooth.le.EXTRA_DATA";
   private BluetoothGatt mBluetoothGatt;
-  private String message="";*/
-  
-  //---------------Value------------------
+  private String message="";
+  */
+
+  /**
+   * GATT value
+   */
   private int battery=0;
   private float temperature=0;
-  private int find_me=0;
-  private int set_find_me=0;
-  
-  
-  
+  private int findMe=0;
+  private int setFindMe=0;
+
+
+
   /**
    * Later
-   *
-   * Later
-   *
-   * @param container container, component will be placed in
+   * @param container, component will be placed in
    */
   public BLE(ComponentContainer container) {
 	  super(container.$form());
 	  activity = container.$context();
-	  mLeDevices=new ArrayList<BluetoothDevice>();
-	  mGattService=new ArrayList<BluetoothGattService>();
+	  mLeDevices = new ArrayList<BluetoothDevice>();
+	  mGattService = new ArrayList<BluetoothGattService>();
 	  //mChar=new ArrayList<BluetoothGattCharacteristic>();
-	  final BluetoothManager bluetoothManager =(BluetoothManager)activity.getSystemService(Context.BLUETOOTH_SERVICE);
-      mBluetoothAdapter = bluetoothManager.getAdapter();
-      mLeDevices_rssi=new HashMap<BluetoothDevice, Integer>();
-      uiThread=new Handler();
+	  final BluetoothManager bluetoothManager = (BluetoothManager)activity.getSystemService(Context.BLUETOOTH_SERVICE);
+    mBluetoothAdapter = bluetoothManager.getAdapter();
+
+    if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+      Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+      activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+    }
+
+    mLeDevices_rssi = new HashMap<BluetoothDevice, Integer>();
+    uiThread = new Handler();
   }
 
-//-----------------------------block-------------------------------------------------------------
+//-----------------------------block------------------------------------------
   /**
    * Later
    */
   @SimpleFunction
-  public void ScanDevice() {
-	  uiThread.postDelayed(new Runnable() {
+  public void ScanDeviceStart() {
+	  runScan = new Runnable() {
           @Override
           public void run() {
-        		  mBluetoothAdapter.startLeScan(mLeScanCallback);  		  
+        		  mBluetoothAdapter.startLeScan(mLeScanCallback);
+              uiThread.postDelayed(runScan, time);
           }
-      }, 1000);
-	  
-	 // mBluetoothAdapter.startLeScan(mLeScanCallback);
+    };
+	 //mBluetoothAdapter.startLeScan(mLeScanCallback);
   }
-  
-  /**
-   * Later
-   */
+
+  @SimpleFunction
+  public void ScanDeviceStop() {
+    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+    uiThread.removeCallbacks(runScan);
+  }
+
   @SimpleFunction
   public void ConnectDevice(int index) {
 	  mBluetoothGatt=mLeDevices.get(index-1).connectGatt(activity, false, mGattCallback);
   }
-  
+
   @SimpleFunction
   public void ReadFindMeValue() {
 	  readChar(BLEList.FINDME_CHAR, BLEList.FINDME_SER);
   }
-  
+
   @SimpleFunction
   public void SetFindMeValue(int value) {
-	  if(value<=2&&value>=0)
-	  {
-		  set_find_me=value;
+	  if (value <= 2 && value >= 0) {
+		  setFindMe=value;
 		  mBluetoothGatt.writeCharacteristic(currentchar);
 	  }
   }
 
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public String GetFindMeValue() {
-	  if(STATE_CHARREAD)
-	  {
-		  return Integer.toString(find_me);
-	  }
-	  else
+	  if(STATE_CHARREAD) {
+		  return Integer.toString(findMe);
+	  } else {
 		  return "Cannot read Find Me Value";
+    }
   }
-  
+
   @SimpleFunction
   public void ReadBatteryValue() {
 	  readChar(BLEList.BATTERY_LEVEL_CHAR, BLEList.BATTERY_LEVEL_SER);
@@ -162,14 +181,13 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
 
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public String GetBatteryValue() {
-	  if(STATE_CHARREAD)
-	  {
+	  if(STATE_CHARREAD) {
 		  return Integer.toString(battery);
-	  }
-	  else
+	  } else {
 		  return "Cannot read Battery Level";
+    }
   }
-  
+
   @SimpleFunction
   public void ReadTemperature() {
 	  readChar(BLEList.THERMOMETER_CHAR, BLEList.THERMOMETER_SER);
@@ -177,90 +195,82 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
 
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public String IsBLEConnected() {
-	  if(STATE_CONNECTED)
+	  if(STATE_CONNECTED) {
 		  return "True";
-	  else
+    } else {
 		  return "False";
+    }
   }
-  
+
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public String GetTemperature() {
-	  if(STATE_CHARREAD)
-	  {
+	  if(STATE_CHARREAD) {
 		  return Float.toString(temperature);
-	  }
-	  else
+	  } else {
 		  return "Cannot read Temperature";
+    }
   }
-  
+
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
-  public String DeviceList()
-  {
+  public String DeviceList() {
 	  deviceAddressList="";
 	  List<BluetoothDevice> sortList=new ArrayList<BluetoothDevice>();
 	  sortList=mLeDevices;
 	  mLeDevices=sorting(sortList);
-	  if(!mLeDevices.isEmpty())
-	  {
+	  if(!mLeDevices.isEmpty()) {
 		  for(int i=0;i<mLeDevices.size();i++){
 			  if(i!=(mLeDevices.size()-1))
 				  deviceAddressList+=mLeDevices.get(i).toString()+" "+mLeDevices.get(i).getName()+" "+Integer.toString(mLeDevices_rssi.get(mLeDevices.get(i)))+",";
 			  else
 				  deviceAddressList+=mLeDevices.get(i).toString()+" "+mLeDevices.get(i).getName()+" "+Integer.toString(mLeDevices_rssi.get(mLeDevices.get(i)));;
-	        }
+	    }
 	  }
 	  return deviceAddressList;
   }
-  
+
   @SimpleFunction
   public void SelectedDevice(int i) {
-	  if(i<mLeDevices.size())
-	  {
+	  if (i<mLeDevices.size()) {
 		  selectedIndex=(i-1);
 	  }
   }
-  
+
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
-  public String SelectedDeviceRssi()
-  {
+  public String SelectedDeviceRssi() {
 	  return Integer.toString(mLeDevices_rssi.get(mLeDevices.get(selectedIndex)));
   }
-  
+
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
-  public String SelectedDeviceName()
-  {
+  public String SelectedDeviceName() {
 	  return mLeDevices.get(selectedIndex).getName();
   }
-  
+
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
-  public String SelectedDeviceAddress()
-  {
+  public String SelectedDeviceAddress() {
 	  return mLeDevices.get(selectedIndex).getAddress();
   }
-  
+
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
-  public String ConnectedDeviceRssi()
-  {
+  public String ConnectedDeviceRssi() {
 	  return Integer.toString(device_rssi);
   }
-  
+
 
   @SimpleEvent(description = "")
   public void Connected() {
 	  EventDispatcher.dispatchEvent(this, "Connected");
-	  }
-  
+	}
+
   @SimpleEvent(description = "")
   public void ValueChanged() {
 	  /*uiThread.post(new Runnable(){
 			@Override
 			public void run() {*/
-				EventDispatcher.dispatchEvent(this, "ValueChanged");
+	  EventDispatcher.dispatchEvent(this, "ValueChanged");
 			//}
-			  
-		  //});
-	  }
-  
+		//});
+	}
+
   @SimpleEvent(description = "")
   public void RssiChanged() {
 	  /*uiThread.postDelayed(new Runnable(){
@@ -268,56 +278,55 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
 		public void run() {*/
 			EventDispatcher.dispatchEvent(this, "RssiChanged");
 		//}
-		  
+
 	  //}, 1000);
   }
-  
+
+  @SimpleEvent(description = "")
+  public void DeviceFound() {
+    EventDispatcher.dispatchEvent(this, "DeviceFound");
+  }
+
   //have not tested
   @SimpleEvent(description = "")
   public void ValueRead() {
 	  EventDispatcher.dispatchEvent(this, "ValueRead");
   }
-  
-  
+
+
   @SimpleEvent(description = "")
   public void ConnectedDeviceRssiChanged() {
-	  uiThread.postDelayed(new Runnable(){
+	  uiThread.postDelayed(new Runnable() {
 		@Override
-		public void run() {
-			EventDispatcher.dispatchEvent(BLE.this, "ConnectedDeviceRssiChanged");
-			mBluetoothGatt.readRemoteRssi();
-		}
-		  
+		  public void run() {
+			     EventDispatcher.dispatchEvent(BLE.this, "ConnectedDeviceRssiChanged");
+			     mBluetoothGatt.readRemoteRssi();
+		  }
 	  }, 1000);
-	  
+
 	/*  Runnable runnable=new Runnable(){
 		   @Override
 		   public void run() {
 			   uiThread.postDelayed(this, 2000);
-		   } 
+		   }
 		};*/
-	  }
-  
-//-------------------------------------------------------------------------------------------------
+	}
 
-//-------------------------function-----------------------------------------------------------------
-  //sort the device list by RSSI*******
-  private List<BluetoothDevice> sorting(List<BluetoothDevice> input)
-  {
+  /**
+   * Functions
+   */
+
+  //sort the device list by RSSI
+  private List<BluetoothDevice> sorting(List<BluetoothDevice> input) {
 	  List<BluetoothDevice> deviceList=new ArrayList<BluetoothDevice>();
 	  BluetoothDevice small;
-	  for(int i=0;i<input.size();i++)
-	  {
+	  for(int i=0;i<input.size();i++) {
 		  small=input.get(i);
-		  if(mLeDevices_rssi.containsKey(small))
-		  {
-			  for(int j=0;j<input.size();j++)
-			  {
+		  if(mLeDevices_rssi.containsKey(small)) {
+			  for(int j=0;j<input.size();j++) {
 				  BluetoothDevice bl2=input.get(j);
-				  if(!small.equals(bl2))
-				  {
-					  if(mLeDevices_rssi.get(small)<=mLeDevices_rssi.get(bl2))
-					  {
+				  if(!small.equals(bl2)) {
+					  if(mLeDevices_rssi.get(small)<=mLeDevices_rssi.get(bl2)) {
 						  small=bl2;
 					  }
 				  }
@@ -328,22 +337,24 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
 	  }
 	  return deviceList;
   }
-  
+
   //add device when scanning
    private void addDevice(BluetoothDevice device, int rssi) {
        if(!mLeDevices.contains(device)) {
            mLeDevices.add(device);
-         }
+           mLeDevices_rssi.put(device, rssi);
+           DeviceFound();
+       }
        mLeDevices_rssi.put(device, rssi);
        RssiChanged();
-    	   
+
    }
-  
+
    //read characteristic based on UUID
    private void readChar(UUID char_uuid, UUID ser_uuid)
    {
-	   if(STATE_SERREAD&&!mGattService.isEmpty())
-		   for(int i=0;i<mGattService.size();i++)
+	   if(STATE_SERREAD&&!mGattService.isEmpty()) {
+		   for(int i = 0;i < mGattService.size();i++)
 		   {
 			   BluetoothGattService check=mGattService.get(i);
 			   if(check.getUuid().equals(ser_uuid))
@@ -351,12 +362,13 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
 				   currentser=check;
 				   currentchar=currentser.getCharacteristic(char_uuid);
 				   mBluetoothGatt.readCharacteristic(currentchar);
-				   
+
 			   }
 		   }
+     }
    }
 //--------------------------------------------------------------------------------------------
-   
+
 //-----------------------------------callback-------------------------------------------------
   //scan callback
   private BluetoothAdapter.LeScanCallback mLeScanCallback =
@@ -371,8 +383,8 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
           });
       }
   };
-  
-  
+
+
   // for connect***********************
  private final BluetoothGattCallback mGattCallback =
           new BluetoothGattCallback() {
@@ -387,7 +399,7 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
           }
           //else show a message
       }
-      
+
       @Override
       // New services discovered
       public void onServicesDiscovered(BluetoothGatt gatt, int status) {
@@ -405,20 +417,15 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
               BluetoothGattCharacteristic characteristic,
               int status) {
     	  if (status == BluetoothGatt.GATT_SUCCESS) {
-    		  if(characteristic.getUuid().equals(BLEList.BATTERY_LEVEL_CHAR))
-    		  {
+    		  if(characteristic.getUuid().equals(BLEList.BATTERY_LEVEL_CHAR)) {
 	    		  battery = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
 	              STATE_CHARREAD=true;
 	              ValueRead();
-    		  }
-    		  else if(characteristic.getUuid().equals(BLEList.THERMOMETER_CHAR))
-    		  {
+    		  } else if(characteristic.getUuid().equals(BLEList.THERMOMETER_CHAR)) {
     			  temperature = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 0);
 	              STATE_CHARREAD=true;
 	              ValueRead();
-    		  }
-    		  else if(characteristic.getUuid().equals(BLEList.FINDME_CHAR))
-    		  {
+    		  } else if(characteristic.getUuid().equals(BLEList.FINDME_CHAR)) {
     			  temperature = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                   STATE_CHARREAD=true;
                   ValueRead();
@@ -427,51 +434,40 @@ public class BLE extends AndroidNonvisibleComponent implements Component{
     	  }
     	  //else show am message
       }
-      
+
       @Override
       //Result of a characteristic read operation is changed
-      public void onCharacteristicChanged (BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
-      {
-    	  if(characteristic.getUuid().equals(BLEList.BATTERY_LEVEL_CHAR))
-		  {
+      public void onCharacteristicChanged (BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+    	  if(characteristic.getUuid().equals(BLEList.BATTERY_LEVEL_CHAR)) {
     		  battery = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-              STATE_CHARREAD=true;
-              ValueChanged();
-		  }
-		  else if(characteristic.getUuid().equals(BLEList.THERMOMETER_CHAR))
-		  {
-			  temperature = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 0);
-              STATE_CHARREAD=true;
-              ValueChanged();
-		  }
-		  else if(characteristic.getUuid().equals(BLEList.FINDME_CHAR))
-		  {
-			  temperature = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-              STATE_CHARREAD=true;
-              ValueChanged();
-		  }
+          STATE_CHARREAD=true;
+          ValueChanged();
+		    } else if(characteristic.getUuid().equals(BLEList.THERMOMETER_CHAR)) {
+			    temperature = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 0);
+          STATE_CHARREAD=true;
+          ValueChanged();
+		    } else if(characteristic.getUuid().equals(BLEList.FINDME_CHAR)) {
+			    temperature = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+          STATE_CHARREAD=true;
+          ValueChanged();
+		    }
       }
-      
+
       @Override
       //set value of characteristic
-      public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
-      {
-    	  if(characteristic.getUuid().equals(BLEList.FINDME_CHAR))
-    	  {
-    		  characteristic.setValue(set_find_me, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+      public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+    	  if(characteristic.getUuid().equals(BLEList.FINDME_CHAR)) {
+    		  characteristic.setValue(setFindMe, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
     	  }
     	  //add other characteristic later
       }
-      
+
       @Override
       //get the RSSI
-      public void onReadRemoteRssi (BluetoothGatt gatt, int rssi, int status)
-      {
+      public void onReadRemoteRssi (BluetoothGatt gatt, int rssi, int status) {
     		  device_rssi=rssi;
     		  ConnectedDeviceRssiChanged();
-    	  
       }
   };
 }
 //-------------------------------------------------------------------------------------
-
