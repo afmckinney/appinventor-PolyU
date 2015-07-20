@@ -5442,90 +5442,78 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("ScanDeviceStart")
   @Description("")
   String ScanDeviceStartMethods();
-    
+
   @DefaultMessage("ScanDeviceStop")
   @Description("")
-    String ScanDeviceStopMethods();
+  String ScanDeviceStopMethods();
 
-  @DefaultMessage("ConnectDevice")
+  @DefaultMessage("ConnectToDevice")
   @Description("")
-  String ConnectDeviceMethods();
-
-  @DefaultMessage("DeviceList")
-  @Description("")
-  String DeviceListProperties();
-
-  @DefaultMessage("ConnectedDeviceRssi")
-  @Description("")
-  String ConnectedDeviceRssiProperties();
-
-  @DefaultMessage("GetBatteryValue")
-  @Description("")
-  String GetBatteryValueProperties();
-
-  @DefaultMessage("ReadBatteryValue")
-  @Description("")
-  String ReadBatteryValueMethods();
-
-  @DefaultMessage("GetTemperature")
-  @Description("")
-  String GetTemperatureProperties();
-
-  @DefaultMessage("IsBLEConnected")
-  @Description("")
-  String IsBLEConnectedProperties();
-
-  @DefaultMessage("ReadTemperature")
-  @Description("")
-  String ReadTemperatureMethods();
-
-  @DefaultMessage("Connected")
-  @Description("")
-  String ConnectedEvents();
-
-  @DefaultMessage("RssiChanged")
-  @Description("")
-  String RssiChangedEvents();
-
-  @DefaultMessage("ValueChanged")
-  @Description("")
-  String ValueChangedEvents();
-
-  @DefaultMessage("DeviceFound")
-  @Description("")
-  String DeviceFoundEvents();
-
-  @DefaultMessage("GetFindMeValue")
-  @Description("")
-  String GetFindMeValueProperties();
+  String ConnectToDeviceMethods();
 
   @DefaultMessage("ReadFindMeValue")
   @Description("")
   String ReadFindMeValueMethods();
 
-  @DefaultMessage("SetFindMeValue")
+  @DefaultMessage("WriteFindMeValue")
   @Description("")
-  String SetFindMeValueMethods();
+  String WriteFindMeValueMethods();
+
+  @DefaultMessage("ReadBatteryValue")
+  @Description("")
+  String ReadBatteryValueMethods();
+
+  @DefaultMessage("ReadTemperatureValue")
+  @Description("")
+  String ReadTemperatureValueMethods();
+
+  @DefaultMessage("FindMeValue")
+  @Description("")
+  String FindMeValueProperties();
+
+  @DefaultMessage("BatteryValue")
+  @Description("")
+  String BatteryValueProperties();
+
+  @DefaultMessage("TemperatureValue")
+  @Description("")
+  String TemperatureValueProperties();
+
+  @DefaultMessage("IsDeviceConnected")
+  @Description("")
+  String IsDeviceConnectedProperties();
+
+  @DefaultMessage("DeviceList")
+  @Description("")
+  String DeviceListProperties();
 
   @DefaultMessage("SelectedDeviceRssi")
   @Description("")
   String SelectedDeviceRssiProperties();
 
-  @DefaultMessage("ConnectedDeviceRssiChanged")
-  @Description("")
-  String ConnectedDeviceRssiChangedEvents();
-
-  @DefaultMessage("SelectedDevice")
-  @Description("")
-  String SelectedDeviceMethods();
-
   @DefaultMessage("SelectedDeviceName")
   @Description("")
   String SelectedDeviceNameProperties();
 
-  @DefaultMessage("SelectedDeviceAddress")
+  @DefaultMessage("ConnectedDeviceRssi")
   @Description("")
-  String SelectedDeviceAddressProperties();
+  String ConnectedDeviceRssiProperties();
+
+  @DefaultMessage("GetConnected")
+  @Description("")
+  String GetConnectedEvents();
+
+  @DefaultMessage("ValueChanged")
+  @Description("")
+  String ValueChangedEvents();
+
+  @DefaultMessage("RssiChanged")
+  @Description("")
+  String RssiChangedEvents();
+
+  @DefaultMessage("DeviceFound")
+  @Description("")
+  String DeviceFoundEvents();
 
   @DefaultMessage("ValueRead")
   @Description("")
