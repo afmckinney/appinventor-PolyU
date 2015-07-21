@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.nio.ByteBuffer;
 
 import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.PropertyCategory;
@@ -678,6 +679,7 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
     private String deviceInfoList="";
     private List<BluetoothDevice> mLeDevices;
     private List<BluetoothGattService> mGattService;
+    private List<BluetoothGattCharacteristic> mGattChar;
     private HashMap<BluetoothDevice, Integer> mLeDevices_rssi;
 
     /**
@@ -709,6 +711,9 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
      */
     private int battery = 0;
     private String temperature = "";
+    private String tempUnit = "";
+    private byte[] data;
+    private byte[] value;
     private int findMe = 0;
     private int setFindMe = 0;
 
@@ -738,20 +743,12 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
 
     @SimpleFunction
     public void ScanDeviceStart() {
-        runScan = new Runnable() {
-            @Override
-            public void run() {
-                mBluetoothAdapter.startLeScan(mLeScanCallback);
-                uiThread.postDelayed(runScan, time);
-            }
-        };
-        //mBluetoothAdapter.startLeScan(mLeScanCallback);
+        mBluetoothAdapter.startLeScan(mLeScanCallback);
     }
 
     @SimpleFunction
     public void ScanDeviceStop() {
         mBluetoothAdapter.stopLeScan(mLeScanCallback);
-        uiThread.removeCallbacks(runScan);
     }
 
     @SimpleFunction
@@ -765,10 +762,9 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
     }
 
     @SimpleFunction
-    public void WriteFindMeValue(int value) {
-        if (value <= 2 && value >= 0) {
-            setFindMe=value;
-            writeChar(BLEList.FINDME_CHAR, BLEList.FINDME_CHAR, value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+    public void WriteFindMeValue(int setFindMe) {
+        if (setFindMe <= 2 && setFindMe >= 0) {
+            writeChar(BLEList.FINDME_CHAR, BLEList.FINDME_SER, setFindMe, BluetoothGattCharacteristic.FORMAT_UINT8,0);
         }
     }
 
@@ -796,16 +792,23 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
         if(STATE_CHARACTERISTICREAD) {
             return Integer.toString(battery);
         } else {
-            return "Cannot read Battery Level";
+            return "Cannot Read Battery Level";
         }
     }
 
     @SimpleProperty(category = PropertyCategory.BEHAVIOR)
     public String TemperatureValue() {
         if(STATE_CHARACTERISTICREAD) {
-            return temperature;
+            if((int) value[0] == 0) {
+                tempUnit = "Celsius";
+            } else {
+                tempUnit = "Fahrenheit";
+            }
+            
+            float mTemp = ((value[2] & 0xff) << 8) + (value[1] & 0xff);
+            return mTemp + tempUnit;
         } else {
-            return "Cannot read Temperature";
+            return "Cannot Read Temperature";
         }
     }
 
@@ -821,9 +824,7 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
     @SimpleProperty(category = PropertyCategory.BEHAVIOR)
     public String DeviceList() {
         deviceInfoList="";
-        List<BluetoothDevice> sortList = new ArrayList<BluetoothDevice>();
-        sortList = mLeDevices;
-        mLeDevices = sortDeviceList(sortList);
+        mLeDevices = sortDeviceList(mLeDevices);
         if(!mLeDevices.isEmpty()) {
             for(int i = 0;i < mLeDevices.size();i++){
                 if(i != (mLeDevices.size() - 1))
@@ -861,12 +862,24 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
 
     @SimpleEvent(description = "")
     public void ValueChanged() {
-        EventDispatcher.dispatchEvent(this, "ValueChanged");
+        uiThread.post(new Runnable(){
+            @Override
+            public void run() {
+                EventDispatcher.dispatchEvent(BLE.this, "ValueChanged");
+            }
+        });
     }
 
     @SimpleEvent(description = "")
     public void RssiChanged() {
-        EventDispatcher.dispatchEvent(this, "RssiChanged");
+        uiThread.postDelayed(new Runnable(){
+            @Override
+            public void run() {
+                EventDispatcher.dispatchEvent(BLE.this, "RssiChanged");
+                mBluetoothGatt.readRemoteRssi();
+            }
+            
+        }, 1000);
     }
 
     @SimpleEvent(description = "")
@@ -921,9 +934,9 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
             mLeDevices.add(device);
             mLeDevices_rssi.put(device, rssi);
             DeviceFound();
+        } else {
+            mLeDevices_rssi.put(device, rssi);
         }
-        mLeDevices_rssi.put(device, rssi);
-        RssiChanged();
     }
 
     //read characteristic based on UUID
@@ -931,32 +944,31 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
 
         if(STATE_SERVICEREAD && !mGattService.isEmpty()) {
             for(int i = 0;i < mGattService.size();i++) {
-                BluetoothGattService check=mGattService.get(i);
-                if(check.getUuid().equals(ser_uuid)) {
-                    currentService=check;
+                if(mGattService.get(i).getUuid().equals(ser_uuid)) {
 
                     BluetoothGattDescriptor desc = mGattService.get(i).getCharacteristic(char_uuid).getDescriptor(BLEList.THERMOMETER_DES);
                     boolean set=desc.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
                     boolean write=mBluetoothGatt.writeDescriptor(desc);
 
-                    currentChar=currentService.getCharacteristic(char_uuid);
                     mBluetoothGatt.setCharacteristicNotification(mGattService.get(i).getCharacteristic(char_uuid), true);
-                    mBluetoothGatt.readCharacteristic(currentChar);
+                    mBluetoothGatt.readCharacteristic(mGattService.get(i).getCharacteristic(char_uuid));
                 }
             }
         }
     }
 
     //Write characteristic based on uuid
-    private void writeChar(UUID char_uuid, UUID ser_uuid, int value, int dataFormat, int offset) {
+    private void writeChar(UUID char_uuid, UUID ser_uuid, int value, int format, int offset) {
         if(STATE_SERVICEREAD && !mGattService.isEmpty()) {
-            for(int i = 0;i < mGattService.size();i++) {
-                BluetoothGattService check=mGattService.get(i);
-                if(check.getUuid().equals(ser_uuid)) {
-                    currentService=check;
-                    currentChar=currentService.getCharacteristic(char_uuid);
-                    currentChar.setValue(value, dataFormat, offset);
-                    mBluetoothGatt.writeCharacteristic(currentChar);
+            for(int i=0;i<mGattService.size();i++) {
+                if(mGattService.get(i).getUuid().equals(ser_uuid)) {
+                    mGattChar=mGattService.get(i).getCharacteristics();
+                    for(int j=0;j<mGattChar.size();j++) {
+                        if(mGattChar.get(j).getUuid().equals(char_uuid)) {
+                            mGattChar.get(j).setValue(value, format, offset);
+                            mBluetoothGatt.writeCharacteristic(mGattChar.get(j));
+                        }
+                    }
                 }
             }
         }
@@ -982,7 +994,6 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 STATE_CONNECTED=true;
                 mBluetoothGatt.discoverServices();
-                mBluetoothGatt.readRemoteRssi();
                 GetConnected();
             }
         }
@@ -1004,11 +1015,6 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
                     battery = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                     STATE_CHARACTERISTICREAD=true;
                     ValueRead();
-                } else if(characteristic.getUuid().equals(BLEList.THERMOMETER_CHAR)) {
-                    byte[]value = characteristic.getValue();
-                    temperature = Byte.toString(value[1])+Byte.toString(value[2])+Byte.toString(value[3])+Byte.toString(value[4]);
-                    STATE_CHARACTERISTICREAD=true;
-                    ValueRead();
                 } else if(characteristic.getUuid().equals(BLEList.FINDME_CHAR)) {
                     findMe = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                     STATE_CHARACTERISTICREAD=true;
@@ -1025,7 +1031,7 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
                 STATE_CHARACTERISTICREAD=true;
                 ValueChanged();
             } else if(characteristic.getUuid().equals(BLEList.THERMOMETER_CHAR)) {
-                byte[]value = characteristic.getValue();
+                value = characteristic.getValue();
                 temperature = Byte.toString(value[1])+Byte.toString(value[2])+Byte.toString(value[3])+Byte.toString(value[4]);
                 STATE_CHARACTERISTICREAD=true;
                 ValueChanged();
@@ -1039,9 +1045,18 @@ public class BLE extends AndroidNonvisibleComponent implements Component {
         @Override
         //set value of characteristic
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            if(characteristic.getUuid().equals(BLEList.FINDME_CHAR)) {
-            characteristic.setValue(setFindMe, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-            }
+            //test += "success"
+        }
+
+        @Override
+        public void onDescriptorRead (BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            byte[] value = descriptor.getValue();
+            temperature+=("desValue:"+Byte.toString(value[0])+Byte.toString(value[1]));
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            //test += "success";
         }
 
         @Override
