@@ -4180,7 +4180,7 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("TakePicture")
   @Description("")
   String TakePictureMethods();
-  
+
   @DefaultMessage("ToggleLight")
   @Description("")
   String ToggleLightMethods();
@@ -5327,11 +5327,11 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GetRowsWithConditionsMethods();
 
-  @DefaultMessage("ÁÆ˛˝˛˝‰∏≠Ê˛˝")
+  @DefaultMessage("ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ‰∏≠ÔøΩÔøΩÔøΩ")
   @Description("")
   String SwitchToSimplifiedChinese();
 
-  @DefaultMessage("ÁπÅ‰˛˝‰∏≠Ê˛˝")
+  @DefaultMessage("ÁπÅÔøΩÔøΩÔøΩ‰∏≠ÔøΩÔøΩÔøΩ")
   @Description("")
   String SwitchToTraditionalChinese();
 
@@ -5434,91 +5434,87 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("XMLTextDecode")
   @Description("")
   String XMLTextDecodeMethods();
-  
+
   @DefaultMessage("BLE")
   @Description("")
   String bleComponentPallette();
-  
-  @DefaultMessage("ScanDevice")
-  @Description("")
-  String ScanDeviceMethods();
-  
-  @DefaultMessage("ConnectDevice")
-  @Description("")
-  String ConnectDeviceMethods();
-  
-  @DefaultMessage("DeviceList")
-  @Description("")
-  String DeviceListProperties();
-  
-  @DefaultMessage("ConnectedDeviceRssi")
-  @Description("")
-  String ConnectedDeviceRssiProperties();
-  
-  @DefaultMessage("GetBatteryValue")
-  @Description("")
-  String GetBatteryValueProperties();
-  
-  @DefaultMessage("ReadBatteryValue")
-  @Description("")
-  String ReadBatteryValueMethods();
-  
-  @DefaultMessage("GetTemperature")
-  @Description("")
-  String GetTemperatureProperties();
-  
-  @DefaultMessage("IsBLEConnected")
-  @Description("")
-  String IsBLEConnectedProperties();
-  
-  @DefaultMessage("ReadTemperature")
-  @Description("")
-  String ReadTemperatureMethods();
 
-  @DefaultMessage("Connected")
+  @DefaultMessage("ScanDeviceStart")
   @Description("")
-  String ConnectedEvents();
-  
-  @DefaultMessage("RssiChanged")
+  String ScanDeviceStartMethods();
+
+  @DefaultMessage("ScanDeviceStop")
   @Description("")
-  String RssiChangedEvents();
-  
-  @DefaultMessage("ValueChanged")
+  String ScanDeviceStopMethods();
+
+  @DefaultMessage("ConnectToDevice")
   @Description("")
-  String ValueChangedEvents();
-  
-  @DefaultMessage("GetFindMeValue")
-  @Description("")
-  String GetFindMeValueProperties();
-  
+  String ConnectToDeviceMethods();
+
   @DefaultMessage("ReadFindMeValue")
   @Description("")
   String ReadFindMeValueMethods();
-  
-  @DefaultMessage("SetFindMeValue")
+
+  @DefaultMessage("WriteFindMeValue")
   @Description("")
-  String SetFindMeValueMethods();
-  
+  String WriteFindMeValueMethods();
+
+  @DefaultMessage("ReadBatteryValue")
+  @Description("")
+  String ReadBatteryValueMethods();
+
+  @DefaultMessage("ReadTemperatureValue")
+  @Description("")
+  String ReadTemperatureValueMethods();
+
+  @DefaultMessage("FindMeValue")
+  @Description("")
+  String FindMeValueProperties();
+
+  @DefaultMessage("BatteryValue")
+  @Description("")
+  String BatteryValueProperties();
+
+  @DefaultMessage("TemperatureValue")
+  @Description("")
+  String TemperatureValueProperties();
+
+  @DefaultMessage("IsDeviceConnected")
+  @Description("")
+  String IsDeviceConnectedProperties();
+
+  @DefaultMessage("DeviceList")
+  @Description("")
+  String DeviceListProperties();
+
   @DefaultMessage("SelectedDeviceRssi")
   @Description("")
   String SelectedDeviceRssiProperties();
-  
-  @DefaultMessage("ConnectedDeviceRssiChanged")
-  @Description("")
-  String ConnectedDeviceRssiChangedEvents();
-  
-  @DefaultMessage("SelectedDevice")
-  @Description("")
-  String SelectedDeviceMethods();
-  
+
   @DefaultMessage("SelectedDeviceName")
   @Description("")
   String SelectedDeviceNameProperties();
-  
-  @DefaultMessage("SelectedDeviceAddress")
+
+  @DefaultMessage("ConnectedDeviceRssi")
   @Description("")
-  String SelectedDeviceAddressProperties();
-  
+  String ConnectedDeviceRssiProperties();
+
+  @DefaultMessage("GetConnected")
+  @Description("")
+  String GetConnectedEvents();
+
+  @DefaultMessage("ValueChanged")
+  @Description("")
+  String ValueChangedEvents();
+
+  @DefaultMessage("RssiChanged")
+  @Description("")
+  String RssiChangedEvents();
+
+  @DefaultMessage("DeviceFound")
+  @Description("")
+  String DeviceFoundEvents();
+
   @DefaultMessage("ValueRead")
   @Description("")
   String ValueReadEvents();
